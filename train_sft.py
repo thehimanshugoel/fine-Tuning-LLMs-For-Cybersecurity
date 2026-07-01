@@ -1,12 +1,10 @@
 from datasets import load_from_disk
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    DataCollatorForLanguageModeling,
-    Trainer,
-    TrainingArguments,
-)
+from transformers import Trainer, TrainingArguments
 
+from src.training import (
+    load_model_and_tokenizer,
+    create_data_collator,
+)
 
 DATASET_PATH = "data/processed/qwen_tokenized_dataset"
 MODEL_NAME = "Qwen/Qwen2.5-0.5B"
@@ -18,19 +16,13 @@ def main():
     dataset = load_from_disk(DATASET_PATH)
 
     # Temporary: use only the first 100 examples
-    dataset["train"] = dataset["train"].select(range(100))
+    train_dataset = dataset["train"].select(range(100))
 
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    # Load model and tokenizer
+    model, tokenizer = load_model_and_tokenizer(MODEL_NAME)
 
-    # Load model
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
-
-    # Data collator
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer,
-        mlm=False,
-    )
+    # Create data collator
+    data_collator = create_data_collator(tokenizer)
 
     # Training configuration
     training_args = TrainingArguments(
@@ -49,15 +41,15 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset["train"],
+        train_dataset=train_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
     )
 
-    # Start training
+    # Train
     trainer.train()
 
-    # Save final model
+    # Save model
     trainer.save_model(f"{OUTPUT_DIR}/final")
     tokenizer.save_pretrained(f"{OUTPUT_DIR}/final")
 
