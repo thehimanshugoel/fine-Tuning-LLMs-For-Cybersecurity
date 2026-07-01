@@ -1,26 +1,16 @@
-from datasets import load_from_disk
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+)
 
+MODEL_NAME = "Qwen/Qwen2.5-0.5B"
 
-DATASET_PATH = "data/processed/qwen_tokenized_dataset"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
 
-def main():
-    # Load the processed dataset
-    dataset = load_from_disk(DATASET_PATH)
+print("\nModel Loaded")
+print(model.__class__.__name__)
 
-    # Verify dataset
-    print("\nDataset Structure")
-    print(dataset)
-
-    print("\nColumns")
-    print(dataset["train"].column_names)
-
-    print("\nNumber of Examples")
-    print(len(dataset["train"]))
-
-    print("\nFirst Example")
-    print(dataset["train"][0])
-
-
-if __name__ == "__main__":
-    main()
+print("\nTokenizer Loaded")
+print(tokenizer.__class__.__name__)
