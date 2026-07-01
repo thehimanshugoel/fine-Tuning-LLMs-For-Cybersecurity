@@ -1,71 +1,50 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-# -----------------------------
-# Load Dataset
-# -----------------------------
-dataset = load_dataset(
-    "Trendyol/Trendyol-Cybersecurity-Instruction-Tuning-Dataset"
+from src.preprocessing import (
+    format_chat,
+    is_valid,
+    tokenize_function,
 )
 
-# -----------------------------
-# Load Tokenizer
-# -----------------------------
-model_name = "Qwen/Qwen2.5-0.5B"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+DATASET_NAME = "Trendyol/Trendyol-Cybersecurity-Instruction-Tuning-Dataset"
+MODEL_NAME = "Qwen/Qwen2.5-0.5B"
+OUTPUT_DIR = "data/processed/qwen_tokenized_dataset"
 
 
-# -----------------------------
-# Validate Dataset
-# -----------------------------
-def is_valid(example):
-    return (
-        example["system"] is not None
-        and example["user"] is not None
-        and example["assistant"] is not None
+def main():
+    # Load dataset
+    dataset = load_dataset(DATASET_NAME)
+
+    # Load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+
+    # Validate dataset
+    clean_dataset = dataset.filter(is_valid)
+
+    # Format chat conversations
+    formatted_dataset = clean_dataset.map(
+        lambda example: format_chat(example, tokenizer)
     )
 
-
-print("Original dataset size:", len(dataset["train"]))
-
-clean_dataset = dataset.filter(is_valid)
-
-print("Clean dataset size:", len(clean_dataset["train"]))
-
-
-# -----------------------------
-# Format Chat
-# -----------------------------
-def format_chat(example):
-    messages = [
-        {"role": "system", "content": example["system"]},
-        {"role": "user", "content": example["user"]},
-        {"role": "assistant", "content": example["assistant"]},
-    ]
-
-    text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=False,
+    # Tokenize dataset
+    tokenized_dataset = formatted_dataset.map(
+        lambda example: tokenize_function(example, tokenizer)
     )
 
-    return {"text": text}
+    # Save processed dataset
+    tokenized_dataset.save_to_disk(OUTPUT_DIR)
+
+    print("Preprocessing completed successfully.")
+    print(f"Dataset saved to: {OUTPUT_DIR}")
+
+    print("\nDataset Structure")
+    print(tokenized_dataset)
+
+    print("\nColumns")
+    print(tokenized_dataset["train"].column_names)
 
 
-# -----------------------------
-# Apply Preprocessing
-# -----------------------------
-formatted_dataset = clean_dataset.map(format_chat)
-
-
-# -----------------------------
-# Verify Output
-# -----------------------------
-print("\nDataset Structure\n")
-print(formatted_dataset)
-
-print("\nColumns\n")
-print(formatted_dataset["train"].column_names)
-
-print("\nFormatted Example\n")
-print(formatted_dataset["train"][0]["text"][:1000])
+if __name__ == "__main__":
+    main()
