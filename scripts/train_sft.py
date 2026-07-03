@@ -16,7 +16,7 @@ def main():
     dataset = load_from_disk(DATASET_PATH)
 
     # Temporary: use only the first 100 examples
-    train_dataset = dataset["train"].select(range(100))
+    train_dataset = dataset["train"]
 
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(MODEL_NAME)

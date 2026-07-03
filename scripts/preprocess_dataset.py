@@ -23,8 +23,14 @@ def main():
     # Validate dataset
     clean_dataset = dataset.filter(is_valid)
 
+    # Create train/test split
+    split_dataset = clean_dataset["train"].train_test_split(
+        test_size=0.1,
+        seed=42,
+    )
+
     # Format chat conversations
-    formatted_dataset = clean_dataset.map(
+    formatted_dataset = split_dataset.map(
         lambda example: format_chat(example, tokenizer)
     )
 
@@ -42,8 +48,11 @@ def main():
     print("\nDataset Structure")
     print(tokenized_dataset)
 
-    print("\nColumns")
+    print("\nTrain Columns")
     print(tokenized_dataset["train"].column_names)
+
+    print("\nTest Columns")
+    print(tokenized_dataset["test"].column_names)
 
 
 if __name__ == "__main__":
