@@ -4,3 +4,5 @@
 /scripts/__pycache__
 /src/evaluation/__pycache__
 /src/evaluation/metrics/__pycache__
+/src/reporting/__pycache__
+/src/visualization/__pycache__

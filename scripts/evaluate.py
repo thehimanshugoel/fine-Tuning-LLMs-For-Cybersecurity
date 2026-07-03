@@ -7,6 +7,7 @@ from datasets import load_from_disk
 from src.evaluation.evaluator import Evaluator
 from src.inference import LoRAInference
 from src.reporting.report_generator import ReportGenerator
+from src.visualization.graph_generator import GraphGenerator
 
 
 DATASET_PATH = "data/processed/qwen_tokenized_dataset"
@@ -27,7 +28,7 @@ def main():
         range(min(NUM_EVAL_SAMPLES, len(dataset["test"])))
     )
 
-    # Load inference model
+    # Load LoRA model
     inference = LoRAInference(
         base_model=BASE_MODEL,
         lora_path=LORA_PATH,
@@ -68,12 +69,24 @@ def main():
 
         print(f"[{idx + 1}/{len(test_dataset)}] Done")
 
-    # Performance metrics
-    average_latency = sum(latencies) / len(latencies)
-    average_tokens = sum(token_counts) / len(token_counts)
-    tokens_per_second = average_tokens / average_latency
+    # -------------------------
+    # Benchmark Metrics
+    # -------------------------
 
-    # Quality metrics
+    average_latency = sum(latencies) / len(latencies)
+
+    average_generated_tokens = (
+        sum(token_counts) / len(token_counts)
+    )
+
+    tokens_per_second = (
+        average_generated_tokens / average_latency
+    )
+
+    # -------------------------
+    # Quality Metrics
+    # -------------------------
+
     evaluator = Evaluator()
 
     results = evaluator.evaluate(
@@ -81,30 +94,47 @@ def main():
         references,
     )
 
-    # Benchmark metrics
     results["average_latency_seconds"] = average_latency
-    results["average_generated_tokens"] = average_tokens
+    results["average_generated_tokens"] = average_generated_tokens
     results["tokens_per_second"] = tokens_per_second
+
+    # -------------------------
+    # Print Results
+    # -------------------------
 
     print("\nEvaluation Results")
     print("------------------")
 
     for metric, score in results.items():
+
         if isinstance(score, float):
             print(f"{metric}: {score:.4f}")
         else:
             print(f"{metric}: {score}")
 
-    # Save metrics JSON
+    # -------------------------
+    # Save JSON
+    # -------------------------
+
     metrics_dir = Path("outputs/metrics")
-    metrics_dir.mkdir(parents=True, exist_ok=True)
+    metrics_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     metrics_file = metrics_dir / "evaluation_results.json"
 
-    with open(metrics_file, "w", encoding="utf-8") as f:
+    with open(
+        metrics_file,
+        "w",
+        encoding="utf-8",
+    ) as f:
         json.dump(results, f, indent=4)
 
-    # Generate benchmark report
+    # -------------------------
+    # Generate Report
+    # -------------------------
+
     report_generator = ReportGenerator()
 
     report_generator.generate(
@@ -115,8 +145,20 @@ def main():
         output_path="outputs/reports/benchmark_report.txt",
     )
 
+    # -------------------------
+    # Generate Graph
+    # -------------------------
+
+    graph_generator = GraphGenerator()
+
+    graph_generator.generate_quality_graph(
+        metrics=results,
+        output_path="outputs/graphs/quality_metrics.png",
+    )
+
     print(f"\nResults saved to: {metrics_file}")
     print("Benchmark report saved to: outputs/reports/benchmark_report.txt")
+    print("Quality graph saved to: outputs/graphs/quality_metrics.png")
 
 
 if __name__ == "__main__":
