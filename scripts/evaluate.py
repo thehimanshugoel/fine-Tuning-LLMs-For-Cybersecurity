@@ -6,6 +6,7 @@ from datasets import load_from_disk
 
 from src.evaluation.evaluator import Evaluator
 from src.inference import LoRAInference
+from src.reporting.report_generator import ReportGenerator
 
 
 DATASET_PATH = "data/processed/qwen_tokenized_dataset"
@@ -56,7 +57,6 @@ def main():
         predictions.append(prediction)
         references.append(example["assistant"])
 
-        # Count generated tokens
         generated_tokens = len(
             inference.tokenizer.encode(
                 prediction,
@@ -70,9 +70,7 @@ def main():
 
     # Performance metrics
     average_latency = sum(latencies) / len(latencies)
-
     average_tokens = sum(token_counts) / len(token_counts)
-
     tokens_per_second = average_tokens / average_latency
 
     # Quality metrics
@@ -92,22 +90,33 @@ def main():
     print("------------------")
 
     for metric, score in results.items():
-
         if isinstance(score, float):
             print(f"{metric}: {score:.4f}")
         else:
             print(f"{metric}: {score}")
 
-    # Save metrics
-    output_dir = Path("outputs/metrics")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Save metrics JSON
+    metrics_dir = Path("outputs/metrics")
+    metrics_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "evaluation_results.json"
+    metrics_file = metrics_dir / "evaluation_results.json"
 
-    with open(output_file, "w", encoding="utf-8") as f:
+    with open(metrics_file, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=4)
 
-    print(f"\nResults saved to: {output_file}")
+    # Generate benchmark report
+    report_generator = ReportGenerator()
+
+    report_generator.generate(
+        metrics=results,
+        model_name="Qwen2.5-0.5B + LoRA",
+        dataset_name="Trendyol Cybersecurity",
+        num_samples=len(test_dataset),
+        output_path="outputs/reports/benchmark_report.txt",
+    )
+
+    print(f"\nResults saved to: {metrics_file}")
+    print("Benchmark report saved to: outputs/reports/benchmark_report.txt")
 
 
 if __name__ == "__main__":
