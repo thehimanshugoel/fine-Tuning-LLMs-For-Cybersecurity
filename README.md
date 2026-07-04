@@ -28,59 +28,33 @@ The project emphasizes modular design, reproducibility, and maintainability, mak
 flowchart TD
     A[Raw Dataset] --> B[Dataset Preprocessing]
     B --> C[Tokenization]
+    
     C --> D[Supervised Fine-Tuning]
     C --> E[LoRA Fine-Tuning]
-    D --> F[Inference]
-    E --> F[Inference]
-    F --> G[Evaluation]
+    
+    D --> F[Inference Engine]
+    E --> F[Inference Engine]
+    
+    F --> G[Evaluation Metrics]
+    F --> L[Performance Benchmarking]
     
     G --> H[Exact Match]
     G --> I[BLEU]
     G --> J[ROUGE-L]
     G --> K[BERTScore]
     
-    G --> L[Benchmarking]
     L --> M[Latency]
     L --> N[Tokens / Second]
     L --> O[Generated Tokens]
     
-    G --> P[Report Generation]
+    H & I & J & K & M & N & O --> P[Report Generation]
     P --> Q[JSON / CSV Reports]
     P --> R[Markdown Report]
     
-    H & I & J & K & L --> S[Graph Visualization]
+    H & I & J & K & M & N & O --> S[Graph Visualization]
 ```
 
-### Module Structure
 
-```mermaid
-classDiagram
-    class Config {
-        DATASET_PATH
-        BASE_MODEL
-        EVALUATION_PARAMS
-    }
-    class Preprocessing {
-        +clean_dataset()
-        +apply_chat_template()
-    }
-    class Training {
-        +train_sft()
-        +train_lora()
-    }
-    class Evaluation {
-        +calculate_bleu()
-        +calculate_rouge()
-    }
-    class Benchmarking {
-        +measure_latency()
-        +calculate_throughput()
-    }
-    Config --> Preprocessing
-    Config --> Training
-    Config --> Evaluation
-    Config --> Benchmarking
-```
 
 ## Features
 
@@ -168,37 +142,7 @@ Merkle tree implementations in blockchain systems face several critical vulnerab
 
 NIST CSF guidelines emphasize implementing robust cryptographic controls (PR.DS-1) and continuous monitoring (DE.CM-1). Organizations should migrate to SHA-256 or SHA-3 hash functions, implement comprehensive proof verification protocols, and establish resource consumption limits. Regular security assessments following NIST SP 800-57 recommendations ensure Merkle tree implementations maintain cryptographic integrity against evolving threat landscapes.
 
-## Project Structure
 
-```text
-LLM-Training-Benchmarking/
-├── data/
-│   ├── raw/
-│   └── processed/
-├── outputs/
-│   ├── graphs/
-│   ├── lora/
-│   ├── metrics/
-│   ├── reports/
-│   └── sft/
-├── scripts/
-│   ├── preprocess_dataset.py
-│   ├── train_sft.py
-│   ├── train_lora.py
-│   ├── infer_lora.py
-│   └── evaluate.py
-├── src/
-│   ├── benchmarking/
-│   ├── evaluation/
-│   ├── reporting/
-│   ├── visualization/
-│   ├── config.py
-│   ├── inference.py
-│   ├── preprocessing.py
-│   └── training.py
-├── requirements.txt
-└── README.md
-```
 
 ## Installation
 
