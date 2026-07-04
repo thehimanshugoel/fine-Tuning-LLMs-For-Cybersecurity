@@ -197,15 +197,5 @@ python -m scripts.evaluate
 ```
 This script will produce metrics and graphs in the `outputs/` directory.
 
-## Design Principles
-
-- Modular architecture
-- Reusable components
-- Reproducible experiments
-- Automated benchmarking
-- Maintainable codebase
-- Extensible project structure
-- Production-oriented organization
-
 ## License
 MIT License
