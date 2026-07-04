@@ -1,0 +1,14 @@
+torch
+transformers
+datasets
+peft
+accelerate
+trl
+evaluate
+bert-score
+rouge-score
+sacrebleu
+matplotlib
+numpy
+pandas
+sentencepiece
