@@ -1,11 +1,7 @@
 import json
-import time
 from pathlib import Path
 
-from datasets import load_from_disk
-
-from src.evaluation.evaluator import Evaluator
-from src.inference import LoRAInference
+from src.benchmarking.benchmark import Benchmark
 from src.reporting.report_generator import ReportGenerator
 from src.visualization.graph_generator import GraphGenerator
 
@@ -15,99 +11,21 @@ DATASET_PATH = "data/processed/qwen_tokenized_dataset"
 BASE_MODEL = "Qwen/Qwen2.5-0.5B"
 LORA_PATH = "outputs/lora/final"
 
-# Number of samples to evaluate
 NUM_EVAL_SAMPLES = 10
 
 
 def main():
 
-    # -------------------------
-    # Load Dataset
-    # -------------------------
-
-    dataset = load_from_disk(DATASET_PATH)
-
-    test_dataset = dataset["test"].select(
-        range(min(NUM_EVAL_SAMPLES, len(dataset["test"])))
-    )
-
-    # -------------------------
-    # Load Model
-    # -------------------------
-
-    inference = LoRAInference(
+    # Run benchmark
+    benchmark = Benchmark(
+        dataset_path=DATASET_PATH,
         base_model=BASE_MODEL,
         lora_path=LORA_PATH,
     )
 
-    predictions = []
-    references = []
-    latencies = []
-    token_counts = []
+    results = benchmark.evaluate(NUM_EVAL_SAMPLES)
 
-    print("Generating predictions...\n")
-
-    for idx, example in enumerate(test_dataset):
-
-        start_time = time.perf_counter()
-
-        prediction = inference.generate(
-            system=example["system"],
-            user=example["user"],
-        )
-
-        end_time = time.perf_counter()
-
-        latency = end_time - start_time
-        latencies.append(latency)
-
-        predictions.append(prediction)
-        references.append(example["assistant"])
-
-        generated_tokens = len(
-            inference.tokenizer.encode(
-                prediction,
-                add_special_tokens=False,
-            )
-        )
-
-        token_counts.append(generated_tokens)
-
-        print(f"[{idx + 1}/{len(test_dataset)}] Done")
-
-    # -------------------------
-    # Performance Metrics
-    # -------------------------
-
-    average_latency = sum(latencies) / len(latencies)
-
-    average_generated_tokens = (
-        sum(token_counts) / len(token_counts)
-    )
-
-    tokens_per_second = (
-        average_generated_tokens / average_latency
-    )
-
-    # -------------------------
-    # Quality Metrics
-    # -------------------------
-
-    evaluator = Evaluator()
-
-    results = evaluator.evaluate(
-        predictions,
-        references,
-    )
-
-    results["average_latency_seconds"] = average_latency
-    results["average_generated_tokens"] = average_generated_tokens
-    results["tokens_per_second"] = tokens_per_second
-
-    # -------------------------
     # Print Results
-    # -------------------------
-
     print("\nEvaluation Results")
     print("------------------")
 
@@ -118,10 +36,7 @@ def main():
         else:
             print(f"{metric}: {score}")
 
-    # -------------------------
-    # Save Metrics JSON
-    # -------------------------
-
+    # Save Metrics
     metrics_dir = Path("outputs/metrics")
     metrics_dir.mkdir(
         parents=True,
@@ -137,24 +52,18 @@ def main():
     ) as f:
         json.dump(results, f, indent=4)
 
-    # -------------------------
-    # Generate Benchmark Report
-    # -------------------------
-
+    # Generate Report
     report_generator = ReportGenerator()
 
     report_generator.generate(
         metrics=results,
         model_name="Qwen2.5-0.5B + LoRA",
         dataset_name="Trendyol Cybersecurity",
-        num_samples=len(test_dataset),
+        num_samples=NUM_EVAL_SAMPLES,
         output_path="outputs/reports/benchmark_report.txt",
     )
 
-    # -------------------------
     # Generate Graphs
-    # -------------------------
-
     graph_generator = GraphGenerator()
 
     graph_generator.generate_quality_graph(
@@ -166,10 +75,6 @@ def main():
         metrics=results,
         output_path="outputs/graphs/performance_metrics.png",
     )
-
-    # -------------------------
-    # Done
-    # -------------------------
 
     print(f"\nResults saved to: {metrics_file}")
     print("Benchmark report saved to: outputs/reports/benchmark_report.txt")

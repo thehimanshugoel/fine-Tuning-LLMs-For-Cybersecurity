@@ -1,3 +1,5 @@
+import time
+
 from datasets import load_from_disk
 
 from src.evaluation.evaluator import Evaluator
@@ -5,6 +7,9 @@ from src.inference import LoRAInference
 
 
 class Benchmark:
+    """
+    Runs benchmarking for a trained model.
+    """
 
     def __init__(
         self,
@@ -25,7 +30,7 @@ class Benchmark:
     def evaluate(
         self,
         num_samples: int,
-    ):
+    ) -> dict:
 
         test_dataset = self.dataset["test"].select(
             range(min(num_samples, len(self.dataset["test"])))
@@ -34,17 +39,56 @@ class Benchmark:
         predictions = []
         references = []
 
-        for example in test_dataset:
+        latencies = []
+        token_counts = []
+
+        print("Generating predictions...\n")
+
+        for idx, example in enumerate(test_dataset):
+
+            start_time = time.perf_counter()
 
             prediction = self.inference.generate(
                 system=example["system"],
                 user=example["user"],
             )
 
+            end_time = time.perf_counter()
+
+            latency = end_time - start_time
+            latencies.append(latency)
+
+            generated_tokens = len(
+                self.inference.tokenizer.encode(
+                    prediction,
+                    add_special_tokens=False,
+                )
+            )
+
+            token_counts.append(generated_tokens)
+
             predictions.append(prediction)
             references.append(example["assistant"])
 
-        return self.evaluator.evaluate(
+            print(f"[{idx + 1}/{len(test_dataset)}] Done")
+
+        results = self.evaluator.evaluate(
             predictions,
             references,
         )
+
+        average_latency = sum(latencies) / len(latencies)
+
+        average_generated_tokens = (
+            sum(token_counts) / len(token_counts)
+        )
+
+        tokens_per_second = (
+            average_generated_tokens / average_latency
+        )
+
+        results["average_latency_seconds"] = average_latency
+        results["average_generated_tokens"] = average_generated_tokens
+        results["tokens_per_second"] = tokens_per_second
+
+        return results
