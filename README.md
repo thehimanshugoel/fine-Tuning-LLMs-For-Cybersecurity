@@ -1,5 +1,17 @@
 # LLM Training and Benchmarking Framework
 
+<p align="center">
+
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)
+![PEFT](https://img.shields.io/badge/PEFT-LoRA-success)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+</p>
+
+---
+
 ## Overview
 
 This project is an end-to-end Large Language Model (LLM) Training and Benchmarking Framework built using PyTorch, Hugging Face Transformers, and PEFT (LoRA).
