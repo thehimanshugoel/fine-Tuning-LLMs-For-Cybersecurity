@@ -88,19 +88,33 @@ class ReportGenerator:
 
 ---
 
-# Example
+# Example Evaluation
 
-## Prompt
+## User Prompt
 
 {example["prompt"]}
 
-## Reference
+---
+
+## Ground Truth
 
 {example["reference"]}
 
-## Model Output
+---
+
+## Model Prediction
 
 {example["prediction"]}
+
+---
+
+# Generated Artifacts
+
+- evaluation_results.json
+- evaluation_results.csv
+- benchmark_report.md
+- quality_metrics.png
+- performance_metrics.png
 """
 
         output_path = Path(output_path)

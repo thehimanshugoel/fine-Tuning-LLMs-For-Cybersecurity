@@ -37,7 +37,9 @@ def main():
         lora_path=LORA_PATH,
     )
 
-    results = benchmark.evaluate(NUM_EVAL_SAMPLES)
+    results, benchmark_example = benchmark.evaluate(
+        NUM_EVAL_SAMPLES
+    )
 
     # --------------------------------------------------
     # Print Results
@@ -119,19 +121,7 @@ def main():
             "temperature": TEMPERATURE,
         },
 
-        example={
-            "prompt": "Explain what SQL Injection is.",
-            "reference": (
-                "SQL Injection is a code injection attack where malicious SQL "
-                "statements are inserted into application queries to manipulate "
-                "a database."
-            ),
-            "prediction": (
-                "SQL Injection is a cyber attack in which malicious SQL "
-                "commands are injected into database queries, allowing "
-                "unauthorized access or manipulation of data."
-            ),
-        },
+        example=benchmark_example,
     )
 
     # --------------------------------------------------
@@ -148,12 +138,16 @@ def main():
 
     graph_generator.generate_quality_graph(
         metrics=results,
-        output_path=str(graphs_dir / "quality_metrics.png"),
+        output_path=str(
+            graphs_dir / "quality_metrics.png"
+        ),
     )
 
     graph_generator.generate_performance_graph(
         metrics=results,
-        output_path=str(graphs_dir / "performance_metrics.png"),
+        output_path=str(
+            graphs_dir / "performance_metrics.png"
+        ),
     )
 
     # --------------------------------------------------
@@ -162,9 +156,18 @@ def main():
 
     print(f"\nResults saved to: {metrics_file}")
     print(f"CSV results saved to: {csv_file}")
-    print(f"Benchmark report saved to: {REPORTS_DIR}/benchmark_report.md")
-    print(f"Quality graph saved to: {graphs_dir / 'quality_metrics.png'}")
-    print(f"Performance graph saved to: {graphs_dir / 'performance_metrics.png'}")
+    print(
+        f"Benchmark report saved to: "
+        f"{REPORTS_DIR}/benchmark_report.md"
+    )
+    print(
+        f"Quality graph saved to: "
+        f"{graphs_dir / 'quality_metrics.png'}"
+    )
+    print(
+        f"Performance graph saved to: "
+        f"{graphs_dir / 'performance_metrics.png'}"
+    )
 
 
 if __name__ == "__main__":

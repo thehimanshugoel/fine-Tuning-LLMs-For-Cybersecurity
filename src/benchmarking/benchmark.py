@@ -2,6 +2,7 @@ import time
 
 from datasets import load_from_disk
 
+from src.config import MAX_NEW_TOKENS
 from src.evaluation.evaluator import Evaluator
 from src.inference import LoRAInference
 
@@ -30,7 +31,7 @@ class Benchmark:
     def evaluate(
         self,
         num_samples: int,
-    ) -> dict:
+    ):
 
         test_dataset = self.dataset["test"].select(
             range(min(num_samples, len(self.dataset["test"])))
@@ -42,15 +43,18 @@ class Benchmark:
         latencies = []
         token_counts = []
 
+        benchmark_example = None
+
         print("Generating predictions...\n")
 
-        for idx, example in enumerate(test_dataset):
+        for idx, sample in enumerate(test_dataset):
 
             start_time = time.perf_counter()
 
             prediction = self.inference.generate(
-                system=example["system"],
-                user=example["user"],
+                system=sample["system"],
+                user=sample["user"],
+                max_new_tokens=MAX_NEW_TOKENS,
             )
 
             end_time = time.perf_counter()
@@ -68,7 +72,15 @@ class Benchmark:
             token_counts.append(generated_tokens)
 
             predictions.append(prediction)
-            references.append(example["assistant"])
+            references.append(sample["assistant"])
+
+            # Save first evaluated example
+            if benchmark_example is None:
+                benchmark_example = {
+                    "prompt": sample["user"],
+                    "reference": sample["assistant"],
+                    "prediction": prediction,
+                }
 
             print(f"[{idx + 1}/{len(test_dataset)}] Done")
 
@@ -91,4 +103,4 @@ class Benchmark:
         results["average_generated_tokens"] = average_generated_tokens
         results["tokens_per_second"] = tokens_per_second
 
-        return results
+        return results, benchmark_example
