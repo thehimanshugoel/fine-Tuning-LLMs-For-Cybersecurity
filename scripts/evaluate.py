@@ -21,14 +21,20 @@ NUM_EVAL_SAMPLES = 10
 
 def main():
 
-    # Load test dataset
+    # -------------------------
+    # Load Dataset
+    # -------------------------
+
     dataset = load_from_disk(DATASET_PATH)
 
     test_dataset = dataset["test"].select(
         range(min(NUM_EVAL_SAMPLES, len(dataset["test"])))
     )
 
-    # Load LoRA model
+    # -------------------------
+    # Load Model
+    # -------------------------
+
     inference = LoRAInference(
         base_model=BASE_MODEL,
         lora_path=LORA_PATH,
@@ -70,7 +76,7 @@ def main():
         print(f"[{idx + 1}/{len(test_dataset)}] Done")
 
     # -------------------------
-    # Benchmark Metrics
+    # Performance Metrics
     # -------------------------
 
     average_latency = sum(latencies) / len(latencies)
@@ -113,7 +119,7 @@ def main():
             print(f"{metric}: {score}")
 
     # -------------------------
-    # Save JSON
+    # Save Metrics JSON
     # -------------------------
 
     metrics_dir = Path("outputs/metrics")
@@ -132,7 +138,7 @@ def main():
         json.dump(results, f, indent=4)
 
     # -------------------------
-    # Generate Report
+    # Generate Benchmark Report
     # -------------------------
 
     report_generator = ReportGenerator()
@@ -146,7 +152,7 @@ def main():
     )
 
     # -------------------------
-    # Generate Graph
+    # Generate Graphs
     # -------------------------
 
     graph_generator = GraphGenerator()
@@ -156,9 +162,19 @@ def main():
         output_path="outputs/graphs/quality_metrics.png",
     )
 
+    graph_generator.generate_performance_graph(
+        metrics=results,
+        output_path="outputs/graphs/performance_metrics.png",
+    )
+
+    # -------------------------
+    # Done
+    # -------------------------
+
     print(f"\nResults saved to: {metrics_file}")
     print("Benchmark report saved to: outputs/reports/benchmark_report.txt")
     print("Quality graph saved to: outputs/graphs/quality_metrics.png")
+    print("Performance graph saved to: outputs/graphs/performance_metrics.png")
 
 
 if __name__ == "__main__":
